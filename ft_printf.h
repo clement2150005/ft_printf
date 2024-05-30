@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/29 19:06:14 by ccolin            #+#    #+#             */
-/*   Updated: 2024/05/29 20:27:50 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/05/30 13:24:26 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,15 @@
 # include <stdarg.h>
 # include <unistd.h>
 
-int		ft_puthex_fd(unsigned long n, int fd, char c);
-int		ft_flags(const char *str, int i, va_list ap);
-int		ft_printf(const char *str, ...);
+typedef struct settings
+{
+	int		left_justify;
+	int		zero_padding;
+	int		precision;
+	int		hex_prefix;
+	int		plus_sign;
+	int		space;
+	char	format;
+}		t_settings;
 
 #endif
