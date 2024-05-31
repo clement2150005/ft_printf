@@ -5,17 +5,18 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/29 19:06:14 by ccolin            #+#    #+#             */
-/*   Updated: 2024/05/30 20:09:33 by ccolin           ###   ########.fr       */
+/*   Created: 2024/05/31 12:14:47 by ccolin            #+#    #+#             */
+/*   Updated: 2024/05/31 16:16:20 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FT_PRINTF_H
 # define FT_PRINTF_H
 
-# include "libft/libft.h"
 # include <stdarg.h>
 # include <unistd.h>
+# include <stdlib.h>
+# include <limits.h>
 
 typedef struct settings
 {
@@ -27,5 +28,8 @@ typedef struct settings
 	int		space;
 	char	format;
 }		t_settings;
+
+// Function prototypes
+int	ft_printf(const char *format, ...);
 
 #endif
