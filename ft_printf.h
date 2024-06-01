@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 12:14:47 by ccolin            #+#    #+#             */
-/*   Updated: 2024/05/31 16:16:20 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/01 11:44:33 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 typedef struct settings
 {
 	int		left_justify;
+	int		right_justify;
 	int		zero_padding;
 	int		precision;
 	int		hex_prefix;

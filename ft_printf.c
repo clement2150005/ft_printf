@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 18:56:11 by ccolin            #+#    #+#             */
-/*   Updated: 2024/05/31 20:01:17 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/01 16:35:48 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,9 @@ int	ft_strlen(const char *str)
 void	ft_reset_settings(t_settings *settings)
 {
 	settings->left_justify = 0;
+	settings->right_justify = 0;
 	settings->zero_padding = 0;
-	settings->precision = 0;
+	settings->precision = -1;
 	settings->hex_prefix = 0;
 	settings->plus_sign = 0;
 	settings->space = 0;
@@ -47,10 +48,15 @@ int	ft_readnbr(const char *str, int *i)
 	nbr = 0;
 	if (str[*i] == '-' || str[*i] == '.')
 		(*i)++;
-	while (str[*i] >= '0' && str[*i] <= '9')
+	if (!(str[*i] >= '0' && str[*i] <= '9'))
+		nbr = 0;
+	else
 	{
-		nbr = nbr * 10 + str[*i] - '0';
-		(*i)++;
+		while (str[*i] >= '0' && str[*i] <= '9')
+		{
+			nbr = nbr * 10 + str[*i] - '0';
+			(*i)++;
+		}
 	}
 	(*i)--;
 	return (nbr);
@@ -75,10 +81,12 @@ void print_settings(const t_settings *s)
 void	ft_setflags(const char *str, int *i, t_settings *settings)
 {
 	while (str[*i] == '-' || str[*i] == '0' || str[*i] == '.' || str[*i] \
-	== '#' || str[*i] == ' ' || str[*i] == '+')
+	== '#' || str[*i] == ' ' || str[*i] == '+' || (str [*i] <= '9' && str [*i] >= '1'))
 	{
 		if (str [*i] == '-')
 			settings->left_justify = ft_readnbr(str, i);
+		else if (str [*i] <= '9' && str [*i] >= '1')
+			settings->right_justify = ft_readnbr(str, i);
 		else if (str [*i] == '0')
 			settings->zero_padding = ft_readnbr(str, i);
 		else if (str [*i] == '.')
@@ -382,13 +390,15 @@ char	*ft_hexprefix(char *str, t_settings *settings)
 	return (result);
 }
 
-int	ft_count_putstr(char *str)
+int	ft_count_putstr(char *str, t_settings *settings)
 {
 	int	i;
 	int	count;
 
 	count = 0;
 	i = 0;
+	if (str[0] == 0 && settings->format == 'd')
+		return (0);
 	if (str[0] == 0)
 		count += ft_count_putchar(str[0]);
 	while (str[i])
@@ -396,23 +406,202 @@ int	ft_count_putstr(char *str)
 	return (count);
 }
 
-char	*ft_precision(char *str, int precision)
+char	*ft_prependminus(char *str)
 {
 	char	*result;
+	int		i;
+	int		j;
 
-	result = malloc(sizeof(char) * (precision + 1));
-	ft_strlcpy(result, str, precision + 1);
+	i = 0;
+	j = 0;
+	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
+	if (!result)
+		return(NULL);
+	result[i++] = '-';
+	while (str[j])
+		result[i++] = str[j++];
+	free(str);
+	return (result);
+}
+
+char	*ft_zpadding_precision(char *str, int	width)
+{
+	int		length;
+	int		i;
+	int		j;
+	char	*result;
+
+	j = 0;
+	length = ft_strlen(str);
+	result = malloc(sizeof(char) + (width +1));
+	i = width - length;
+	while (i > 0)
+	{
+		result[j++] = '0';
+		i--;
+	}
+	while (str[i])
+		result[j++] = str[i++];
+	result[j] = '\0';
+	while (j-- > 0)
+		if (result[j] == '-')
+			result[j] = '0';
+	if (str[0] == '-')
+		result = ft_prependminus(result);
+	free(str);
+	return (result);
+}
+
+char	*ft_precision(char *str, t_settings *settings)
+{
+	char	*result;
+	
+	if (settings->format != 's')
+	{
+		if (str[0] == '0' && settings->precision == 0)
+		{
+			free(str);
+			return (ft_strdup_printf(""));
+		}
+		if (settings->precision >= (ft_strlen(str)) && settings->format == 'd')
+		str = ft_zpadding_precision(str, settings->precision);
+		return (str);
+	}
+	if (settings->precision == 0)
+		result = ft_strdup_printf("");
+	else
+	{
+		result = malloc(sizeof(char) * (settings->precision + 1));
+		if (!result)
+			return (0);
+		ft_strlcpy(result, str, settings->precision + 1);
+	}
+	free(str);
+	return (result);
+}
+
+char	*ft_plus_space(char *str, t_settings *settings)
+{
+	int		i;
+	int		j;
+	char	*result;
+
+	i = 0;
+	j = 0;
+	if (settings->format != 'd' || settings->format != 'i')
+		return (str);
+	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
+	if (!result)
+		return (NULL);
+	if (str[0] != '-')
+		if (settings->plus_sign != 0)
+			result[j++] = '+';
+	if (settings->space != 0 && settings->plus_sign == 0)
+		result[j++] = ' ';
+	while (str[i])
+		result[j++] = str[i++];
+	result[j] = '\0';
+	free(str);
+	return (result);
+}
+
+char	*ft_zero_padding(char *str, t_settings *settings)
+{
+	int		width;
+	int		length;
+	int		i;
+	int		j;
+	char	*result;
+
+	j = 0;
+	width = settings->zero_padding;
+	length = ft_strlen(str);
+	if (length > width)
+		return (str);
+	result = malloc(sizeof(char) + (width +1));
+	i = width - length;
+	while (i > 0)
+	{
+		result[j++] = '0';
+		i--;
+	}
+	while (str[i])
+		result[j++] = str[i++];
+	result[j] = '\0';
+	free(str);
+	return (result);
+}
+
+char	*ft_right_justify(char *str, t_settings *settings)
+{
+	int		width;
+	int		length;
+	int		i;
+	int		j;
+	char	*result;
+
+	j = 0;
+	width = settings->right_justify;
+	length = ft_strlen(str);
+	if (length > width)
+		return (str);
+	result = malloc(sizeof(char) + (width +1));
+	i = width - length;
+	while (i > 0)
+	{
+		result[j++] = ' ';
+		i--;
+	}
+	while (str[i])
+		result[j++] = str[i++];
+	result[j] = '\0';
+	free(str);
+	return (result);
+}
+
+char	*ft_left_justify(char *str, t_settings *settings)
+{
+	int		width;
+	int		length;
+	int		i;
+	int		j;
+	char	*result;
+
+	j = 0;
+	i = 0;
+	width = settings->left_justify;
+	length = ft_strlen(str);
+	if (length > width)
+		return (str);
+	result = malloc(sizeof(char) + (width +1));
+	while (str[i])
+		result[j++] = str[i++];
+	i = width - length;
+	while (i > 0)
+	{
+		result[j++] = ' ';
+		i--;
+	}
+	result[j] = '\0';
 	free(str);
 	return (result);
 }
 
 char	*ft_flags(char *str, t_settings *settings)
 {
-	if (settings->precision != 0)
-		str = ft_precision(str, settings->precision);
+	if (settings->precision != -1)
+		str = ft_precision(str, settings);
 	if ((settings->format == 'x' || settings->format == 'X') && \
 	settings->hex_prefix != 0)
 		str = ft_hexprefix(str, settings);
+	if (settings->plus_sign != 0 || settings->space != 0)
+		str = ft_plus_space(str, settings);
+	if (settings->left_justify != 0)
+		str = ft_left_justify(str, settings);
+	if (settings->right_justify != 0)
+		str = ft_right_justify(str, settings);
+	if (settings->zero_padding != 0 && settings->left_justify == 0)
+		str = ft_zero_padding(str, settings);
 	return (str);
 }
 
@@ -464,7 +653,7 @@ int	ft_print(t_settings *settings, va_list ap)
 		free(result);
 		return (0);
 	}
-	count = ft_count_putstr(result);
+	count = ft_count_putstr(result, settings);
 	free(result);
 	return (count);
 }
@@ -522,10 +711,10 @@ int	ft_printf(const char *str, ...)
 // 	hex_lower = 123456789;
 // 	hex_upper = 123456789;
 // 	printf("\nprintf\n");
-// 	ret_printf = printf("%p", (void *)-1);
+// 	ret_printf = printf("%.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d", 0, 5, -1, -10, 100, -1862, INT_MIN, INT_MAX);
 // 	printf("\n%d", ret_printf);
 // 	printf("\nft_printf\n");
-// 	ret_ft_printf = ft_printf("%p", (void *)-1);
+// 	ret_ft_printf = ft_printf("%.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d", 0, 5, -1, -10, 100, -1862, INT_MIN, INT_MAX);
 // 	printf("\n%d", ret_ft_printf);
 // 	return (0);
 // }

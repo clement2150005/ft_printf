@@ -13,6 +13,9 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	$(AR) $(NAME) $(OBJ)
 
+bonus:
+	@make all
+
 clean:
 	rm -f $(OBJ)
 
