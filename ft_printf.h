@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 12:14:47 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/01 11:44:33 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/03 21:25:42 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,21 @@
 # include <stdlib.h>
 # include <limits.h>
 
-typedef struct settings
+# define TEST "%01.d", 0
+
+typedef struct opts
 {
-	int		left_justify;
-	int		right_justify;
-	int		zero_padding;
-	int		precision;
-	int		hex_prefix;
-	int		plus_sign;
-	int		space;
-	char	format;
-}		t_settings;
+	int		ljust;
+	int		rjust;
+	int		zpad;
+	int		prec;
+	int		hxpfx;
+	int		plssgn;
+	int		spc;
+	char	fmt;
+}		t_opts;
 
 // Function prototypes
-int	ft_printf(const char *format, ...);
+int	ft_printf(const char *fmt, ...);
 
 #endif

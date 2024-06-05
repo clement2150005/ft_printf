@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 18:56:11 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/01 16:35:48 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/03 21:38:16 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,16 +23,24 @@ int	ft_strlen(const char *str)
 	return (i);
 }
 
-void	ft_reset_settings(t_settings *settings)
+int	ft_is_fmt_nbr(t_opts *opts)
 {
-	settings->left_justify = 0;
-	settings->right_justify = 0;
-	settings->zero_padding = 0;
-	settings->precision = -1;
-	settings->hex_prefix = 0;
-	settings->plus_sign = 0;
-	settings->space = 0;
-	settings->format = '0';
+	if ((opts->fmt == 'd' || opts->fmt == 'i' || opts->fmt == 'u' || \
+	opts->fmt == 'x' || opts->fmt == 'X'))
+		return (1);
+	return (0);
+}
+
+void	ft_reset_opts(t_opts *opts)
+{
+	opts->ljust = 0;
+	opts->rjust = 0;
+	opts->zpad = 0;
+	opts->prec = -1;
+	opts->hxpfx = 0;
+	opts->plssgn = 0;
+	opts->spc = 0;
+	opts->fmt = '0';
 }
 
 int	ft_count_putchar(char c)
@@ -62,78 +70,65 @@ int	ft_readnbr(const char *str, int *i)
 	return (nbr);
 }
 
-void print_settings(const t_settings *s)
+void	ft_setflags(const char *str, int *i, t_opts *opts)
 {
-    if (s == NULL) {
-        printf("Settings pointer is NULL\n");
-        return;
-    }
-    printf("Settings:\n");
-    printf(" Left Justify: %d\n", s->left_justify);
-    printf(" Zero Padding: %d\n", s->zero_padding);
-    printf(" Precision: %d\n", s->precision);
-    printf(" Hex Prefix: %d\n", s->hex_prefix);
-    printf(" Plus Sign: %d\n", s->plus_sign);
-    printf(" Space: %d\n", s->space);
-    printf(" Format: '%c'\n", s->format);
-}
-
-void	ft_setflags(const char *str, int *i, t_settings *settings)
-{
-	while (str[*i] == '-' || str[*i] == '0' || str[*i] == '.' || str[*i] \
-	== '#' || str[*i] == ' ' || str[*i] == '+' || (str [*i] <= '9' && str [*i] >= '1'))
+	while (str[*i] == '-' || str[*i] == '0' || str[*i] == '.' || str[*i] == \
+	'#' || str[*i] == ' ' || str[*i] == '+' || (str [*i] <= '9' && str [*i] \
+	>= '1'))
 	{
 		if (str [*i] == '-')
-			settings->left_justify = ft_readnbr(str, i);
+			opts->ljust = ft_readnbr(str, i);
 		else if (str [*i] <= '9' && str [*i] >= '1')
-			settings->right_justify = ft_readnbr(str, i);
-		else if (str [*i] == '0')
-			settings->zero_padding = ft_readnbr(str, i);
+			opts->rjust = ft_readnbr(str, i);
 		else if (str [*i] == '.')
-			settings->precision = ft_readnbr(str, i);
+			opts->prec = ft_readnbr(str, i);
+		else if (str [*i] == '0')
+			opts->zpad = ft_readnbr(str, i);
 		else if (str [*i] == '#')
-			settings->hex_prefix = 1;
+			opts->hxpfx = 1;
 		else if (str [*i] == ' ')
-			settings->space = 1;
+			opts->spc = 1;
 		else if (str [*i] == '+')
-			settings->plus_sign = 1;
+			opts->plssgn = 1;
 		(*i)++;
 	}
 }
-void	ft_set_settings(const char *str, int *i, t_settings *settings)
-{
-	int	save;	save = *i;
 
-	ft_setflags(str, i, settings);
-	if (str[*i] == 'c' || str[*i] == 's' || str[*i] == 'p' || \
-			str[*i] == 'd' || str[*i] == 'i' || str[*i] == 'u' || \
-				str[*i] == 'x' || str[*i] == 'X' || str[*i] == '%')
-		settings->format = str[(*i)++];
+void	ft_set_opts(const char *str, int *i, t_opts *opts)
+{
+	int	save;
+
+	save = *i;
+	ft_setflags(str, i, opts);
+	if (str[*i] == 'c' || str[*i] == 's' || str[*i] == 'p' || str[*i] == 'd'\
+	|| str[*i] == 'i' || str[*i] == 'u' || str[*i] == 'x' || str[*i] == 'X'\
+	|| str[*i] == '%')
+		opts->fmt = str[(*i)++];
 	else
 		*i = save - 1;
 }
 
-int	ft_initialize(int **i, t_settings **settings, int *count)
+int	ft_initialize(int **i, t_opts **opts, int *count)
 {
 	*i = malloc(sizeof(int));
 	if (!*i)
 		return (0);
-	*settings = malloc(sizeof(t_settings));
-	if (!*settings)
+	*opts = malloc(sizeof(t_opts));
+	if (!*opts)
 	{
 		free(*i);
 		return (0);
 	}
 	**i = 0;
 	*count = 0;
-	ft_reset_settings(*settings);
+	ft_reset_opts(*opts);
 	return (1);
 }
 
-void	ft_freeall(int **i, t_settings **settings)
+void	ft_freeall(int **i, t_opts **opts)
 {
 	free(*i);
-	free(*settings);
+	free(*opts);
 }
 
 unsigned int	ft_strlcpy(char *dst, const char *src, size_t dstsize)
@@ -161,9 +156,9 @@ char	*ft_strdup_printf(const char *s1)
 	if (!s1)
 	{
 		ptr = malloc(sizeof(char) * 7);
-		ft_strlcpy((char *)ptr, "(null)", 7);
 		if (!ptr)
 			return (NULL);
+		ft_strlcpy((char *)ptr, "(null)", 7);
 		return (ptr);
 	}
 	i = 0;
@@ -180,7 +175,7 @@ char	*ft_strdup_printf(const char *s1)
 	return (ptr);
 }
 
-char *ft_charcpy(char c)
+char	*ft_charcpy(char c)
 {
 	char	*str;
 
@@ -307,7 +302,7 @@ char	*ft_uitoa(unsigned int n)
 	return (s);
 }
 
-char	*ft_cpyhex(unsigned int nbr, t_settings settings, int i)
+char	*ft_cpyhex(unsigned int nbr, t_opts opts, int i)
 {
 	int				len;
 	static char		*s;
@@ -325,7 +320,7 @@ char	*ft_cpyhex(unsigned int nbr, t_settings settings, int i)
 		s[i] = '\0';
 	if (nbr != 0)
 	{
-		ft_cpyhex(nbr / 16, settings, i + 1);
+		ft_cpyhex(nbr / 16, opts, i + 1);
 		if (nbr % 16 < 10)
 			s[i] = (nbr % 16) + '0';
 		else
@@ -365,7 +360,7 @@ char	*ft_cpyptr(uintptr_t ptr, int i)
 	return (s);
 }
 
-char	*ft_hexprefix(char *str, t_settings *settings)
+char	*ft_hxpfx(char *str, t_opts *opts)
 {
 	int		i;
 	int		j;
@@ -375,13 +370,15 @@ char	*ft_hexprefix(char *str, t_settings *settings)
 	j = 0;
 	if (!str)
 		return (NULL);
+	if (str[0] == '0' && str[1] == '\0' && opts->fmt != 'p')
+		return (str);
 	result = malloc(sizeof(char) * (ft_strlen(str) + 3));
 	if (!result)
 		return (NULL);
 	result[j++] = '0';
-	if (settings->format == 'x' || settings->format == 'p')
+	if (opts->fmt == 'x' || opts->fmt == 'p')
 		result[j++] = 'x';
-	if (settings->format == 'X')
+	if (opts->fmt == 'X')
 		result[j++] = 'X';
 	while (str[i])
 		result[j++] = str[i++];
@@ -390,20 +387,32 @@ char	*ft_hexprefix(char *str, t_settings *settings)
 	return (result);
 }
 
-int	ft_count_putstr(char *str, t_settings *settings)
+int	ft_count_putstr(char *str, t_opts *opts)
 {
 	int	i;
 	int	count;
 
 	count = 0;
 	i = 0;
-	if (str[0] == 0 && settings->format == 'd')
+	if (str[0] == 0 && opts->fmt == 'd')
 		return (0);
 	if (str[0] == 0)
 		count += ft_count_putchar(str[0]);
 	while (str[i])
 		count += ft_count_putchar(str[i++]);
 	return (count);
+}
+
+void	*ft_memset(void *b, int c, size_t len)
+{
+	size_t			i;
+	unsigned char	*ptr;
+
+	ptr = (unsigned char *)b;
+	i = 0;
+	while (i < len)
+		ptr[i++] = c;
+	return (b);
 }
 
 char	*ft_prependminus(char *str)
@@ -416,7 +425,8 @@ char	*ft_prependminus(char *str)
 	j = 0;
 	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
 	if (!result)
-		return(NULL);
+		return (NULL);
+	ft_memset(result, 0, sizeof(char) * (ft_strlen(str) + 2));
 	result[i++] = '-';
 	while (str[j])
 		result[i++] = str[j++];
@@ -424,7 +434,7 @@ char	*ft_prependminus(char *str)
 	return (result);
 }
 
-char	*ft_zpadding_precision(char *str, int	width)
+char	*ft_zpad_prec(char *str, int width)
 {
 	int		length;
 	int		i;
@@ -433,7 +443,7 @@ char	*ft_zpadding_precision(char *str, int	width)
 
 	j = 0;
 	length = ft_strlen(str);
-	result = malloc(sizeof(char) + (width +1));
+	result = malloc(sizeof(char) * (width +1));
 	i = width - length;
 	while (i > 0)
 	{
@@ -452,35 +462,35 @@ char	*ft_zpadding_precision(char *str, int	width)
 	return (result);
 }
 
-char	*ft_precision(char *str, t_settings *settings)
+char	*ft_prec(char *str, t_opts *opts)
 {
 	char	*result;
-	
-	if (settings->format != 's')
+
+	if (opts->fmt != 's')
 	{
-		if (str[0] == '0' && settings->precision == 0)
+		if (str[0] == '0' && opts->prec == 0)
 		{
 			free(str);
 			return (ft_strdup_printf(""));
 		}
-		if (settings->precision >= (ft_strlen(str)) && settings->format == 'd')
-		str = ft_zpadding_precision(str, settings->precision);
+		if (opts->prec >= (ft_strlen(str)) && ft_is_fmt_nbr(opts))
+			str = ft_zpad_prec(str, opts->prec);
 		return (str);
 	}
-	if (settings->precision == 0)
+	if (opts->prec == 0)
 		result = ft_strdup_printf("");
 	else
 	{
-		result = malloc(sizeof(char) * (settings->precision + 1));
+		result = malloc(sizeof(char) * (opts->prec + 1));
 		if (!result)
 			return (0);
-		ft_strlcpy(result, str, settings->precision + 1);
+		ft_strlcpy(result, str, opts->prec + 1);
 	}
 	free(str);
 	return (result);
 }
 
-char	*ft_plus_space(char *str, t_settings *settings)
+char	*ft_pls_spc(char *str, t_opts *opts)
 {
 	int		i;
 	int		j;
@@ -488,15 +498,15 @@ char	*ft_plus_space(char *str, t_settings *settings)
 
 	i = 0;
 	j = 0;
-	if (settings->format != 'd' || settings->format != 'i')
+	if (opts->fmt != 'd' && opts->fmt != 'i')
 		return (str);
 	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
 	if (!result)
 		return (NULL);
 	if (str[0] != '-')
-		if (settings->plus_sign != 0)
+		if (opts->plssgn != 0)
 			result[j++] = '+';
-	if (settings->space != 0 && settings->plus_sign == 0)
+	if (opts->spc != 0 && opts->plssgn == 0 && str[0] != '-')
 		result[j++] = ' ';
 	while (str[i])
 		result[j++] = str[i++];
@@ -505,7 +515,23 @@ char	*ft_plus_space(char *str, t_settings *settings)
 	return (result);
 }
 
-char	*ft_zero_padding(char *str, t_settings *settings)
+char	*ft_moveminus(char *result)
+{
+	int	i;
+
+	i = 0;
+	while (result[i++])
+	{
+		if (result[i] == '-')
+		{
+			result[i] = '0';
+			result[0] = '-';
+		}
+	}
+	return (result);
+}
+
+char	*ft_zpad(char *str, t_opts *opts)
 {
 	int		width;
 	int		length;
@@ -514,11 +540,13 @@ char	*ft_zero_padding(char *str, t_settings *settings)
 	char	*result;
 
 	j = 0;
-	width = settings->zero_padding;
+	width = opts->zpad;
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) + (width +1));
+	result = malloc(sizeof(char) * (width +1));
+	if (!result)
+		return (NULL);
 	i = width - length;
 	while (i > 0)
 	{
@@ -529,10 +557,12 @@ char	*ft_zero_padding(char *str, t_settings *settings)
 		result[j++] = str[i++];
 	result[j] = '\0';
 	free(str);
+	if (opts->fmt == 'd' || opts->fmt == 'i')
+		result = ft_moveminus(result);
 	return (result);
 }
 
-char	*ft_right_justify(char *str, t_settings *settings)
+char	*ft_rjust(char *str, t_opts *opts)
 {
 	int		width;
 	int		length;
@@ -541,11 +571,13 @@ char	*ft_right_justify(char *str, t_settings *settings)
 	char	*result;
 
 	j = 0;
-	width = settings->right_justify;
+	width = opts->rjust;
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) + (width +1));
+	result = malloc(sizeof(char) * (width +1));
+	if (!result)
+		return (NULL);
 	i = width - length;
 	while (i > 0)
 	{
@@ -559,7 +591,7 @@ char	*ft_right_justify(char *str, t_settings *settings)
 	return (result);
 }
 
-char	*ft_left_justify(char *str, t_settings *settings)
+char	*ft_ljust(char *str, t_opts *opts)
 {
 	int		width;
 	int		length;
@@ -569,11 +601,13 @@ char	*ft_left_justify(char *str, t_settings *settings)
 
 	j = 0;
 	i = 0;
-	width = settings->left_justify;
+	width = opts->ljust;
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) + (width +1));
+	result = malloc(sizeof(char) * (width +1));
+	if (!result)
+		return (NULL);
 	while (str[i])
 		result[j++] = str[i++];
 	i = width - length;
@@ -587,21 +621,20 @@ char	*ft_left_justify(char *str, t_settings *settings)
 	return (result);
 }
 
-char	*ft_flags(char *str, t_settings *settings)
+char	*ft_flags(char *str, t_opts *opts)
 {
-	if (settings->precision != -1)
-		str = ft_precision(str, settings);
-	if ((settings->format == 'x' || settings->format == 'X') && \
-	settings->hex_prefix != 0)
-		str = ft_hexprefix(str, settings);
-	if (settings->plus_sign != 0 || settings->space != 0)
-		str = ft_plus_space(str, settings);
-	if (settings->left_justify != 0)
-		str = ft_left_justify(str, settings);
-	if (settings->right_justify != 0)
-		str = ft_right_justify(str, settings);
-	if (settings->zero_padding != 0 && settings->left_justify == 0)
-		str = ft_zero_padding(str, settings);
+	if (opts->prec != -1)
+		str = ft_prec(str, opts);
+	if ((opts->fmt == 'x' || opts->fmt == 'X') && opts->hxpfx != 0)
+		str = ft_hxpfx(str, opts);
+	if (opts->plssgn != 0 || opts->spc != 0)
+		str = ft_pls_spc(str, opts);
+	if (opts->ljust != 0)
+		str = ft_ljust(str, opts);
+	if (opts->rjust != 0)
+		str = ft_rjust(str, opts);
+	if (opts->zpad != 0 && opts->ljust == 0)
+		str = ft_zpad(str, opts);
 	return (str);
 }
 
@@ -625,35 +658,69 @@ char	*ft_strupper(char *str)
 	return (str);
 }
 
-int	ft_print(t_settings *settings, va_list ap)
+char	*ft_setstr(t_opts *opts, va_list ap)
+{
+	char	*result;
+
+	if (opts->fmt == 'c')
+		result = ft_charcpy((char)va_arg(ap, int));
+	if (opts->fmt == 's')
+		result = ft_strdup_printf(va_arg(ap, char *));
+	if (opts->fmt == 'd' || opts->fmt == 'i')
+		result = ft_itoa(va_arg(ap, int));
+	if (opts->fmt == 'u')
+		result = ft_uitoa(va_arg(ap, unsigned int));
+	if (opts->fmt == 'x' || opts->fmt == 'X')
+		result = ft_cpyhex(va_arg(ap, unsigned int), *opts, 0);
+	if (opts->fmt == 'X')
+		result = ft_strupper(result);
+	if (opts->fmt == 'p')
+		result = ft_hxpfx(ft_cpyptr(va_arg(ap, uintptr_t), 0), opts);
+	if (opts->fmt == '%')
+		result = ft_charcpy('%');
+	return (result);
+}
+
+int	ft_charljust(char *result, t_opts *opts)
+{
+	int	count;
+	int	i;
+
+	count = 0;
+	if (opts->fmt == 'c' && opts->ljust != 0)
+	{
+		i = opts->ljust;
+		count += ft_count_putchar(result[0]);
+		while (i > 1)
+		{
+			count += ft_count_putchar(' ');
+			i--;
+		}
+	}
+	return (count);
+}
+
+int	ft_print(t_opts *opts, va_list ap)
 {
 	int		count;
 	char	*result;
 
 	count = 0;
-	if (settings->format == 'c')
-		result = ft_charcpy((char)va_arg(ap, int));
-	if (settings->format == 's')
-		result = ft_strdup_printf(va_arg(ap, char *));
-	if (settings->format == 'd' || settings->format == 'i')
-		result = ft_itoa(va_arg(ap, int));
-	if (settings->format == 'u')
-		result = ft_uitoa(va_arg(ap, unsigned int));
-	if (settings->format == 'x' || settings->format == 'X')
-		result = ft_cpyhex(va_arg(ap, unsigned int), *settings, 0);
-	if (settings->format == 'X')
-		result = ft_strupper(result);
-	if (settings->format == 'p')
-		result = ft_hexprefix(ft_cpyptr(va_arg(ap, uintptr_t), 0), settings);
-	if (settings->format == '%')
-		result = ft_charcpy('%');
-	result = ft_flags(result, settings);
-	if (settings->format == 's' && result[0] == '\0')
+	result = ft_setstr(opts, ap);
+	count = ft_charljust(result, opts);
+	if (count == 0)
 	{
-		free(result);
-		return (0);
+		result = ft_flags(result, opts);
+		if (opts->fmt == 's' && result[0] == '\0')
+		{
+			free(result);
+			return (0);
+		}
+		else if (opts->prec == 0 && opts->zpad != 0 && opts->fmt == 'd' \
+		&& result[0] == '0')
+			result[0] = ' ';
+		count = ft_count_putstr(result, opts);
 	}
-	count = ft_count_putstr(result, settings);
 	free(result);
 	return (count);
 }
@@ -662,10 +729,10 @@ int	ft_printf(const char *str, ...)
 {
 	int			*i;
 	int			count;
-	t_settings	*settings;
+	t_opts		*opts;
 	va_list		ap;
 
-	if (ft_initialize(&i, &settings, &count) == 0)
+	if (ft_initialize(&i, &opts, &count) == 0)
 		return (0);
 	va_start(ap, str);
 	while (str[*i])
@@ -673,16 +740,15 @@ int	ft_printf(const char *str, ...)
 		if (str[*i] == '%')
 		{
 			(*i)++;
-			ft_set_settings(str, i, settings);
-			// print_settings(settings);
+			ft_set_opts(str, i, opts);
 		}
-		if (settings->format != '0')
-			count += ft_print(settings, ap);
+		if (opts->fmt != '0')
+			count += ft_print(opts, ap);
 		else
 			count += ft_count_putchar(str[(*i)++]);
-		ft_reset_settings(settings);
+		ft_reset_opts(opts);
 	}
-	ft_freeall(&i, &settings);
+	ft_freeall(&i, &opts);
 	return (count);
 }
 
@@ -711,10 +777,10 @@ int	ft_printf(const char *str, ...)
 // 	hex_lower = 123456789;
 // 	hex_upper = 123456789;
 // 	printf("\nprintf\n");
-// 	ret_printf = printf("%.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d", 0, 5, -1, -10, 100, -1862, INT_MIN, INT_MAX);
+// 	ret_printf = printf(TEST);
 // 	printf("\n%d", ret_printf);
 // 	printf("\nft_printf\n");
-// 	ret_ft_printf = ft_printf("%.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d, %.5d", 0, 5, -1, -10, 100, -1862, INT_MIN, INT_MAX);
+// 	ret_ft_printf = ft_printf(TEST);
 // 	printf("\n%d", ret_ft_printf);
 // 	return (0);
 // }
