@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 18:56:11 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/06 13:06:52 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/06 14:58:49 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -672,6 +672,8 @@ char	*ft_flags(char *str, t_opts *opts)
 		str = ft_zpad(str, opts);
 	if (opts->zpad != -1 && opts->ljust == 0)
 		str = ft_rjust(str, opts);
+	//if (opts->rjust != 0 && opts->zpad != -1 && opts->plssgn != 0)
+	//	ft_
 	return (str);
 }
 
