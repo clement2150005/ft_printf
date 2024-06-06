@@ -6,12 +6,33 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 18:56:11 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/03 21:38:16 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/06 13:06:52 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 #include <stdio.h>
+
+void	*ft_calloc(size_t count, size_t size)
+{
+	size_t		i;
+	void		*ptr;
+	char		*ptr1;
+
+	if (count >= 2147483647)
+		return (NULL);
+	ptr = malloc(count * size);
+	if (ptr == NULL)
+		return (NULL);
+	ptr1 = (char *)ptr;
+	i = 0;
+	while (i < count * size)
+	{
+		ptr1[i] = 0;
+		i++;
+	}
+	return (ptr);
+}
 
 int	ft_strlen(const char *str)
 {
@@ -35,12 +56,13 @@ void	ft_reset_opts(t_opts *opts)
 {
 	opts->ljust = 0;
 	opts->rjust = 0;
-	opts->zpad = 0;
+	opts->zpad = -1;
 	opts->prec = -1;
 	opts->hxpfx = 0;
 	opts->plssgn = 0;
 	opts->spc = 0;
 	opts->fmt = '0';
+	opts->chrnll = 0;
 }
 
 int	ft_count_putchar(char c)
@@ -110,10 +132,10 @@ void	ft_set_opts(const char *str, int *i, t_opts *opts)
 
 int	ft_initialize(int **i, t_opts **opts, int *count)
 {
-	*i = malloc(sizeof(int));
+	*i = ft_calloc(1, sizeof(int));
 	if (!*i)
 		return (0);
-	*opts = malloc(sizeof(t_opts));
+	*opts = ft_calloc(1, sizeof(t_opts));
 	if (!*opts)
 	{
 		free(*i);
@@ -155,7 +177,7 @@ char	*ft_strdup_printf(const char *s1)
 
 	if (!s1)
 	{
-		ptr = malloc(sizeof(char) * 7);
+		ptr = ft_calloc(7, sizeof(char));
 		if (!ptr)
 			return (NULL);
 		ft_strlcpy((char *)ptr, "(null)", 7);
@@ -163,7 +185,7 @@ char	*ft_strdup_printf(const char *s1)
 	}
 	i = 0;
 	size = ft_strlen(s1);
-	ptr = malloc(sizeof(char) * size + 1);
+	ptr = ft_calloc(size + 1, sizeof(char));
 	if (ptr == NULL)
 		return (NULL);
 	while (s1[i])
@@ -175,11 +197,13 @@ char	*ft_strdup_printf(const char *s1)
 	return (ptr);
 }
 
-char	*ft_charcpy(char c)
+char	*ft_charcpy(char c, t_opts *opts)
 {
 	char	*str;
 
-	str = malloc(sizeof(char) * 2);
+	if (c == '\0')
+		opts->chrnll = 1;
+	str = ft_calloc(2, sizeof(char));
 	if (!str)
 		return (NULL);
 	str[0] = c;
@@ -244,7 +268,7 @@ char	*ft_itoa(int n)
 		nbr = -n;
 	if (n >= 0)
 		nbr = n;
-	s = malloc(sizeof(char) * len + 1);
+	s = ft_calloc(len + 1, sizeof(char));
 	if (s == NULL)
 		return (NULL);
 	s[i--] = '\0';
@@ -266,7 +290,7 @@ char	*ft_strrev(char *s)
 
 	i = 0;
 	j = 0;
-	reversed = malloc(sizeof(char) * (ft_strlen(s) + 1));
+	reversed = ft_calloc((ft_strlen(s) + 1), sizeof(char));
 	if (!reversed)
 		return (NULL);
 	while (s[i])
@@ -284,7 +308,7 @@ char	*ft_uitoa(unsigned int n)
 	char			*s;
 
 	i = 0;
-	s = malloc(sizeof(char) * 20);
+	s = ft_calloc(20, sizeof(char));
 	if (!s)
 		return (NULL);
 	if (n == 0)
@@ -312,7 +336,7 @@ char	*ft_cpyhex(unsigned int nbr, t_opts opts, int i)
 		if (nbr == 0)
 			return (ft_strdup_printf("0"));
 		len = ft_hexlen(nbr);
-		s = malloc(sizeof(char) * (len + 1));
+		s = ft_calloc((len + 1), sizeof(char));
 		if (s == NULL)
 			return (NULL);
 	}
@@ -341,7 +365,7 @@ char	*ft_cpyptr(uintptr_t ptr, int i)
 		if (ptr == 0)
 			return (ft_strdup_printf("0"));
 		len = ft_hexlen(ptr);
-		s = malloc(sizeof(char) * (len + 1000));
+		s = ft_calloc((len + 1), sizeof(char));
 		if (s == NULL)
 			return (NULL);
 	}
@@ -372,7 +396,7 @@ char	*ft_hxpfx(char *str, t_opts *opts)
 		return (NULL);
 	if (str[0] == '0' && str[1] == '\0' && opts->fmt != 'p')
 		return (str);
-	result = malloc(sizeof(char) * (ft_strlen(str) + 3));
+	result = ft_calloc((ft_strlen(str) + 3), sizeof(char));
 	if (!result)
 		return (NULL);
 	result[j++] = '0';
@@ -396,10 +420,12 @@ int	ft_count_putstr(char *str, t_opts *opts)
 	i = 0;
 	if (str[0] == 0 && opts->fmt == 'd')
 		return (0);
-	if (str[0] == 0)
+	if (str[0] == 0 && opts->prec == -1)
 		count += ft_count_putchar(str[0]);
 	while (str[i])
 		count += ft_count_putchar(str[i++]);
+	if (opts->chrnll == 1 && opts->rjust != 0 && opts->fmt != '%')
+	count += ft_count_putchar('\0');
 	return (count);
 }
 
@@ -423,10 +449,9 @@ char	*ft_prependminus(char *str)
 
 	i = 0;
 	j = 0;
-	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
+	result = ft_calloc((ft_strlen(str) + 2), sizeof(char));
 	if (!result)
 		return (NULL);
-	ft_memset(result, 0, sizeof(char) * (ft_strlen(str) + 2));
 	result[i++] = '-';
 	while (str[j])
 		result[i++] = str[j++];
@@ -434,7 +459,7 @@ char	*ft_prependminus(char *str)
 	return (result);
 }
 
-char	*ft_zpad_prec(char *str, int width)
+char	*prec_prepend0(char *str, int width)
 {
 	int		length;
 	int		i;
@@ -443,7 +468,7 @@ char	*ft_zpad_prec(char *str, int width)
 
 	j = 0;
 	length = ft_strlen(str);
-	result = malloc(sizeof(char) * (width +1));
+	result = ft_calloc((width +1), sizeof(char));
 	i = width - length;
 	while (i > 0)
 	{
@@ -474,14 +499,14 @@ char	*ft_prec(char *str, t_opts *opts)
 			return (ft_strdup_printf(""));
 		}
 		if (opts->prec >= (ft_strlen(str)) && ft_is_fmt_nbr(opts))
-			str = ft_zpad_prec(str, opts->prec);
+			str = prec_prepend0(str, opts->prec);
 		return (str);
 	}
 	if (opts->prec == 0)
 		result = ft_strdup_printf("");
 	else
 	{
-		result = malloc(sizeof(char) * (opts->prec + 1));
+		result = ft_calloc((opts->prec + 1), sizeof(char));
 		if (!result)
 			return (0);
 		ft_strlcpy(result, str, opts->prec + 1);
@@ -500,7 +525,7 @@ char	*ft_pls_spc(char *str, t_opts *opts)
 	j = 0;
 	if (opts->fmt != 'd' && opts->fmt != 'i')
 		return (str);
-	result = malloc(sizeof(char) * (ft_strlen(str) + 2));
+	result = ft_calloc((ft_strlen(str) + 2), sizeof(char));
 	if (!result)
 		return (NULL);
 	if (str[0] != '-')
@@ -527,6 +552,11 @@ char	*ft_moveminus(char *result)
 			result[i] = '0';
 			result[0] = '-';
 		}
+		if (result[i] == ' ')
+		{
+			result[i] = '0';
+			result[0] = ' ';
+		}
 	}
 	return (result);
 }
@@ -544,7 +574,7 @@ char	*ft_zpad(char *str, t_opts *opts)
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) * (width +1));
+	result = ft_calloc((width +1), sizeof(char));
 	if (!result)
 		return (NULL);
 	i = width - length;
@@ -571,14 +601,19 @@ char	*ft_rjust(char *str, t_opts *opts)
 	char	*result;
 
 	j = 0;
-	width = opts->rjust;
+	if (opts->prec != -1 && opts->zpad != -1)
+		width = opts->zpad;
+	else
+		width = opts->rjust;
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) * (width +1));
+	result = ft_calloc((width +1), sizeof(char));
 	if (!result)
 		return (NULL);
 	i = width - length;
+	if (opts->chrnll == 1 && opts->rjust != 0 && opts->fmt != '%')
+		i--;
 	while (i > 0)
 	{
 		result[j++] = ' ';
@@ -605,7 +640,7 @@ char	*ft_ljust(char *str, t_opts *opts)
 	length = ft_strlen(str);
 	if (length > width)
 		return (str);
-	result = malloc(sizeof(char) * (width +1));
+	result = ft_calloc((width +1), sizeof(char));
 	if (!result)
 		return (NULL);
 	while (str[i])
@@ -633,8 +668,10 @@ char	*ft_flags(char *str, t_opts *opts)
 		str = ft_ljust(str, opts);
 	if (opts->rjust != 0)
 		str = ft_rjust(str, opts);
-	if (opts->zpad != 0 && opts->ljust == 0)
+	if (opts->zpad != -1 && opts->ljust == 0 && opts->prec == -1)
 		str = ft_zpad(str, opts);
+	if (opts->zpad != -1 && opts->ljust == 0)
+		str = ft_rjust(str, opts);
 	return (str);
 }
 
@@ -663,7 +700,7 @@ char	*ft_setstr(t_opts *opts, va_list ap)
 	char	*result;
 
 	if (opts->fmt == 'c')
-		result = ft_charcpy((char)va_arg(ap, int));
+		result = ft_charcpy((char)va_arg(ap, int), opts);
 	if (opts->fmt == 's')
 		result = ft_strdup_printf(va_arg(ap, char *));
 	if (opts->fmt == 'd' || opts->fmt == 'i')
@@ -677,7 +714,7 @@ char	*ft_setstr(t_opts *opts, va_list ap)
 	if (opts->fmt == 'p')
 		result = ft_hxpfx(ft_cpyptr(va_arg(ap, uintptr_t), 0), opts);
 	if (opts->fmt == '%')
-		result = ft_charcpy('%');
+		result = ft_charcpy('%', opts);
 	return (result);
 }
 
@@ -716,7 +753,7 @@ int	ft_print(t_opts *opts, va_list ap)
 			free(result);
 			return (0);
 		}
-		else if (opts->prec == 0 && opts->zpad != 0 && opts->fmt == 'd' \
+		else if (opts->prec == 0 && opts->zpad != -1 && opts->fmt == 'd' \
 		&& result[0] == '0')
 			result[0] = ' ';
 		count = ft_count_putstr(result, opts);
@@ -752,35 +789,35 @@ int	ft_printf(const char *str, ...)
 	return (count);
 }
 
-// #include <stdio.h>
-// #include "ft_printf.h"
+ #include <stdio.h>
+ #include "ft_printf.h"
 
-// int main(void)
-// {
-// 	char			c;
-// 	char			*str;
-// 	void			*ptr;
-// 	int				decimal;
-// 	int			 	integer;
-// 	unsigned int	uinteger;
-// 	unsigned int	hex_lower;
-// 	unsigned int	hex_upper;
-// 	int			 	ret_printf;
-// 	int			 	ret_ft_printf;
+ int main(void)
+ {
+ 	char			c;
+ 	char			*str;
+ 	void			*ptr;
+ 	int				decimal;
+ 	int			 	integer;
+ 	unsigned int	uinteger;
+ 	unsigned int	hex_lower;
+ 	unsigned int	hex_upper;
+ 	int			 	ret_printf;
+ 	int			 	ret_ft_printf;
 
-// 	c = 'A';
-// 	str = "cool";
-// 	ptr = str;
-// 	decimal = 42;
-// 	integer = -42;
-// 	uinteger = 42;
-// 	hex_lower = 123456789;
-// 	hex_upper = 123456789;
-// 	printf("\nprintf\n");
-// 	ret_printf = printf(TEST);
-// 	printf("\n%d", ret_printf);
-// 	printf("\nft_printf\n");
-// 	ret_ft_printf = ft_printf(TEST);
-// 	printf("\n%d", ret_ft_printf);
-// 	return (0);
-// }
+ 	c = 'A';
+ 	str = "cool";
+ 	ptr = str;
+ 	decimal = 42;
+ 	integer = -42;
+ 	uinteger = 42;
+ 	hex_lower = 123456789;
+ 	hex_upper = 123456789;
+ 	printf("\nprintf\n");
+ 	ret_printf = printf(TEST);
+ 	printf("\n%d", ret_printf);
+ 	printf("\nft_printf\n");
+ 	ret_ft_printf = ft_printf(TEST);
+ 	printf("\n%d", ret_ft_printf);
+ 	return (0);
+ }
