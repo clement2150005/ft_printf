@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 12:14:47 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/06 14:59:41 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/08 13:21:57 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 # include <stdlib.h>
 # include <limits.h>
 
-# define TEST "%0+10d, %0+10d, %0+10d, %0+10d, %0+10d, %0+10d, %0+10d, %0+10d", 0, 5, -1, -10, 100, -1862, INT_MIN, INT_MAX
+# define TEST "!%61lc!", (char)167
 
 typedef struct opts
 {
@@ -30,6 +30,7 @@ typedef struct opts
 	int		plssgn;
 	int		spc;
 	int		chrnll;
+	int		width;
 	char	fmt;
 }		t_opts;
 
