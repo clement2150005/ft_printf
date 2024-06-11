@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 12:14:47 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/08 13:21:57 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/11 11:10:25 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,6 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <limits.h>
-
-# define TEST "!%61lc!", (char)167
 
 typedef struct opts
 {
@@ -34,7 +32,6 @@ typedef struct opts
 	char	fmt;
 }		t_opts;
 
-// Function prototypes
 int	ft_printf(const char *fmt, ...);
 
 #endif

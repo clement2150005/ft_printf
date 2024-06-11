@@ -6,7 +6,7 @@
 /*   By: ccolin <ccolin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/31 18:56:11 by ccolin            #+#    #+#             */
-/*   Updated: 2024/06/08 13:41:37 by ccolin           ###   ########.fr       */
+/*   Updated: 2024/06/11 12:38:56 by ccolin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,6 +339,17 @@ char	*ft_uitoa(unsigned int n)
 	return (s);
 }
 
+int	ft_cpyhex_0(int nbr, t_opts *opts)
+{
+	if (nbr == 0)
+	{
+		opts->hxpfx = 0;
+		return (1);
+	}
+	else
+		return (0);
+}
+
 char	*ft_cpyhex(unsigned int nbr, t_opts *opts, int i)
 {
 	int				len;
@@ -346,11 +357,8 @@ char	*ft_cpyhex(unsigned int nbr, t_opts *opts, int i)
 
 	if (i == 0)
 	{
-		if (nbr == 0)
-		{
-			opts->hxpfx = 0;
+		if (ft_cpyhex_0(nbr, opts))
 			return (ft_strdup_printf("0"));
-		}
 		len = ft_hexlen(nbr);
 		s = ft_calloc((len + 1), sizeof(char));
 		if (s == NULL)
@@ -441,7 +449,7 @@ int	ft_count_putstr(char *str, t_opts *opts)
 	while (str[i])
 		count += ft_count_putchar(str[i++]);
 	if (opts->chrnll == 1 && opts->rjust != 0 && opts->fmt != '%')
-	count += ft_count_putchar('\0');
+		count += ft_count_putchar('\0');
 	return (count);
 }
 
@@ -564,7 +572,8 @@ char	*ft_moveminus(char *result)
 	i = 0;
 	while (result[i++])
 	{
-		if (result[i] == '-' || result[i] == '+' || result[i] == ' ' || result[i] == 'x'|| result[i] == 'X')
+		if (result[i] == '-' || result[i] == '+' || result[i] == ' ' || \
+		result[i] == 'x' || result[i] == 'X')
 		{
 			c = result[i];
 			result[i] = '0';
@@ -606,6 +615,17 @@ char	*ft_zpad(char *str, int width, t_opts *opts)
 	return (result);
 }
 
+int	ft_rjust_init(char *str, int *width, int *length, t_opts *opts)
+{
+	if (opts->prec != -1 && opts->zpad != -1 && \
+	opts->plssgn == 0 && opts->rjust == 0)
+		*width = opts->zpad;
+	else
+		*width = opts->rjust;
+	*length = ft_strlen(str);
+	return (0);
+}
+
 char	*ft_rjust(char *str, t_opts *opts)
 {
 	int		width;
@@ -614,12 +634,7 @@ char	*ft_rjust(char *str, t_opts *opts)
 	int		j;
 	char	*result;
 
-	j = 0;
-	if (opts->prec != -1 && opts->zpad != -1 && opts->plssgn == 0 && opts->rjust == 0)
-		width = opts->zpad;
-	else
-		width = opts->rjust;
-	length = ft_strlen(str);
+	j = ft_rjust_init(str, &width, &length, opts);
 	if (length > width)
 		return (str);
 	result = ft_calloc((width +1), sizeof(char));
@@ -685,14 +700,17 @@ char	*ft_flags(char *str, t_opts *opts)
 		str = ft_ljust(str, opts);
 	if (opts->rjust != 0 && opts->zpad == -1 && opts->ljust == -1)
 		str = ft_rjust(str, opts);
-	if (opts->rjust != 0 && opts->ljust == -1 && opts->zpad != -1 && (opts->plssgn != 0 || opts->spc != 0))
+	if (opts->rjust != 0 && opts->ljust == -1 && opts->zpad != -1 && \
+	(opts->plssgn != 0 || opts->spc != 0))
 		str = ft_rjust(str, opts);
 	if (opts->zpad != -1 && opts->ljust == -1 && opts->prec == -1)
 		str = ft_zpad(str, opts-> width, opts);
 	if (opts->zpad != -1 && opts->ljust == -1)
 		str = ft_rjust(str, opts);
-	if (!(opts->zpad != -1 && opts->rjust != 0 && (opts->plssgn != 0 || opts->spc != 0) && opts->prec != -1))
-		if (opts->zpad != -1 && opts->rjust != 0 && (opts->plssgn != 0 || opts->spc != 0))
+	if (!(opts->zpad != -1 && opts->rjust != 0 && \
+	(opts->plssgn != 0 || opts->spc != 0) && opts->prec != -1))
+		if (opts->zpad != -1 && opts->rjust != 0 && \
+		(opts->plssgn != 0 || opts->spc != 0))
 			str = ft_zpad(str, opts->rjust, opts);
 	return (str);
 }
@@ -811,20 +829,4 @@ int	ft_printf(const char *str, ...)
 	ft_freeall(&i, &opts);
 	va_end(ap);
 	return (count);
-}
-
-int	main(void)
-{
-	int	count;
-	printf("\nft_printf\n"); fflush(stdout);
-	printf("|"); fflush(stdout);
-	count = ft_printf(TEST);
-	printf("|"); fflush(stdout);
-	printf ("   %d", count); fflush(stdout);
-	printf("\nprintf\n"); fflush(stdout);
-	printf("|"); fflush(stdout);
-	count = printf(TEST); fflush(stdout);
-	printf("|"); fflush(stdout);
-	printf ("   %d", count); fflush(stdout);
-	return (0);
 }
